@@ -41,10 +41,12 @@ def binary_file(bin_filename,ls_image,ls_label, size = (32,32)):
         r = arr[:,:,0].flatten()
         g = arr[:,:,0].flatten()
         b = arr[:,:,0].flatten()
-        r = np.array(list(lbl) + list(r) + list(g) + list(b), np.uint8s)
+        r = np.array(list(lbl) + list(r) + list(g) + list(b), np.uint8)
         ls.append(r)
 
     output = np.array(ls)
     output.tofile(bin_filename)
+
+
 
 
