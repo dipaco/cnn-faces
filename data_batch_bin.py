@@ -45,7 +45,7 @@ def binary_file(bin_filename,ls_image,ls_label, size = (32,32)):
         ls.append(r)
 
     output = np.array(ls)
-    output.tofile(bin_filename)
+    output.dump(bin_filename)
 
 
 
