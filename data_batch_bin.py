@@ -52,5 +52,17 @@ def binary_file(bin_filename,ls_image,ls_label, size = (32,32), dump = 0):
         output.tofile(bin_filename)
 
 
-
+def read_binary_file(bin_filename, dump = 0):
+    if dump:
+        def unpickle(file):
+            import _pickle as cPickle
+            fo = open(file, 'rb')
+            dict = cPickle.load(fo)
+            fo.close()
+            return dict
+        return unpickle(bin_filename)
+    else:
+        return np.fromfile(bin_filename,dtype = np.uint8)
+        
+    
 
