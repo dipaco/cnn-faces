@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-def binary_file(bin_filename,ls_image,ls_label, size = (32,32)):
+def binary_file(bin_filename,ls_image,ls_label, size = (32,32), dump = 0):
     """
     https://www.cs.toronto.edu/~kriz/cifar.html
     The CIFAR-10 dataset consists of 60000 32x32 colour images in 10 classes, 
@@ -45,7 +45,11 @@ def binary_file(bin_filename,ls_image,ls_label, size = (32,32)):
         ls.append(r)
 
     output = np.array(ls)
-    output.tofile(bin_filename)
+
+    if dump:
+        output.dump(bin_filename)
+    else:
+        output.tofile(bin_filename)
 
 
 
