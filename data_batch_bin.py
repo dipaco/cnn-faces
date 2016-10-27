@@ -69,7 +69,7 @@ def binary_file(bin_filename,ls_image,ls_label, size = (32,32), dump = 0):
 def binary_file(bin_filename,image):
     pass
 
-def read_binary_file(bin_filename, dump = 0, type = np.uint8):
+def read_binary_file(bin_filename, dump = 0, typea = np.uint8):
     if dump:
         def unpickle(file):
             import _pickle as cPickle
@@ -79,10 +79,10 @@ def read_binary_file(bin_filename, dump = 0, type = np.uint8):
             return dict
         return unpickle(bin_filename)
     else:
-        return np.fromfile(bin_filename,dtype = type)
+        return np.fromfile(bin_filename,dtype = typea)
 
 
-def arr_image(filename, height = 32 ,width = 32, hwp = False):
+def arr_image(filename, d = 1,height = 32 ,width = 32):
     # Image:
     #   +----+----+----+----+
     #   | 0  | 1  | 2  | 3  |
@@ -97,14 +97,16 @@ def arr_image(filename, height = 32 ,width = 32, hwp = False):
     with Image.open(filename) as im:
         imgwidth, imgheight = im.size
         grid = []
-        if hwp:
-            height = width = int((imgwidth + imgheight) / 8)
-        for h in range(0, imgheight, height):
-            for w in range(0,imgwidth,width):
+        k = 0
+        for h in range(0, imgheight, int(height/d)):
+            for w in range(0,imgwidth,int(width/d)):
                 grid.append(im.crop((w, h, w+width, h+height)))
+                #frm = im.crop((w, h, w+width, h+height))
+                #frm.save('face_%d.jpg'%k)
+                #k += 1
         return grid       
 
-def logits2image(filename,size):
+def logits2image(filename,imfilename,size):
     # logits:
     #   [-1, 1, 1, -1, -1, 1, -1, -1], size = [4,2]
     # Image:
@@ -114,7 +116,7 @@ def logits2image(filename,size):
     #   | 0  |255 | 0  | 0  |
     #   +----+----+----+----+
     #
-    logits = read_binary_file(filename, type = np.float32)
+    logits = read_binary_file(filename, dump = 1)
     height = width = int((size[0] + size[1]) / 8)
     k = 0
     i = []
@@ -122,6 +124,7 @@ def logits2image(filename,size):
         row = []
         for w in range(0,size[0],width): 
             p = np.zeros((height,width),dtype = np.uint8)
+            print(logits[k])
             if logits[k] > 0:
                 p.fill(255)
             k += 1
@@ -131,12 +134,12 @@ def logits2image(filename,size):
     im = np.concatenate(i)
     img = Image.fromarray(im)
     img = img.crop((0,0,size[0],size[1]))
-    img.save('im_logits.jpg')
+    img.save(imfilename)
             
         
 def binary_file(bin_filename,im_filename, size = (32,32), dump = 0):
     ls = []
-    ls_images = arr_image(im_filename, hwp = True)
+    ls_images = arr_image(im_filename, d = 8, height = 80 ,width = 80)
     ls_label = [0 for i in range(0,len(ls_images))]
     
     for k,im in enumerate(ls_images):
@@ -168,5 +171,3 @@ if __name__ == '__main__':
         bin_filename = sys.argv[1]
         im_filename = sys.argv[2]
         binary_file(bin_filename,im_filename)
-    
-   
