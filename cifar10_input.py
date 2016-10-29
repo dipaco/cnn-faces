@@ -30,7 +30,7 @@ import tensorflow as tf
 IMAGE_SIZE = 24
 
 # Global constants describing the CIFAR-10 data set.
-NUM_CLASSES = 2#10
+NUM_CLASSES = 2
 NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 50000
 NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 10000
 
@@ -116,6 +116,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
     # read 'batch_size' images + labels from the example queue.
     num_preprocess_threads = 16
     if shuffle:
+        print("shuffle")
         images, label_batch = tf.train.shuffle_batch(
             [image, label],
             batch_size=batch_size,
@@ -146,6 +147,8 @@ def distorted_inputs(data_dir, batch_size):
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
     """
+    print("DISTORED INPUTS:")
+    print(batch_size)
     filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                        for i in xrange(1, 2)]
     for f in filenames:
