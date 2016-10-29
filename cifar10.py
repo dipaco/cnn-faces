@@ -189,7 +189,7 @@ def dump_kernel(kernel, num=0):
     with tf.Session() as sess:
         sess.run(init)
         k = sess.run(kernel)
-        k.dump('kernel_%d.obj'%num)
+        k.dump('kernel_%d.bin'%num)
    
 def put_kernels_on_grid (kernel, grid_Y, grid_X, pad=1):
     ##
