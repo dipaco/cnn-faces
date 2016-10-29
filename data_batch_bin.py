@@ -1,8 +1,8 @@
 import numpy as np
 from PIL import Image
+import sys
 
 def progressB(step, total, bar_len, info = '', symb_f = '\u2588', symb_e = '-'):
-    import sys
     from math import ceil
 
     progress = (step/total) * 100.0
@@ -58,16 +58,13 @@ def binary_file(bin_filename,ls_image,ls_label, size = (32,32), dump = 0):
         b = arr[:,:,0].flatten()
         r = np.array(list(lbl) + list(r) + list(g) + list(b), np.uint8)
         ls.append(r)        
-
+    print()
     output = np.array(ls)
 
     if dump:
         output.dump(bin_filename)
     else:
         output.tofile(bin_filename)
-
-def binary_file(bin_filename,image):
-    pass
 
 def read_binary_file(bin_filename, dump = 0, typea = np.uint8):
     if dump:
@@ -82,7 +79,7 @@ def read_binary_file(bin_filename, dump = 0, typea = np.uint8):
         return np.fromfile(bin_filename,dtype = typea)
 
 
-def arr_image(filename, d = 1,height = 32 ,width = 32):
+def arr_image(filename, d = 1,height = 32 ,width = 32, simsf = False):
     # Image:
     #   +----+----+----+----+
     #   | 0  | 1  | 2  | 3  |
@@ -98,12 +95,13 @@ def arr_image(filename, d = 1,height = 32 ,width = 32):
         imgwidth, imgheight = im.size
         grid = []
         k = 0
-        for h in range(0, imgheight, int(height/d)):
-            for w in range(0,imgwidth,int(width/d)):
+        for h in range(0, imgheight, d):
+            for w in range(0,imgwidth,d):
                 grid.append(im.crop((w, h, w+width, h+height)))
-                #frm = im.crop((w, h, w+width, h+height))
-                #frm.save('face_%d.jpg'%k)
-                #k += 1
+                if simsf:
+                    frm = grid[k]#im.crop((w, h, w+width, h+height))
+                    frm.save('face_%d.jpg'%k)
+                    k += 1                
         return grid       
 
 def logits2image(filename,imfilename,size):
@@ -137,12 +135,13 @@ def logits2image(filename,imfilename,size):
     img.save(imfilename)
             
         
-def binary_file(bin_filename,im_filename, size = (32,32), dump = 0):
+def binary_file(bin_filename, im_filename, step, box = (81,81) ,size = (32,32), dump = 0):
     ls = []
-    ls_images = arr_image(im_filename, d = 8, height = 80 ,width = 80)
+    ls_images = arr_image(im_filename, d = step, height = box[0] ,width = box[1])
     ls_label = [0 for i in range(0,len(ls_images))]
     
     for k,im in enumerate(ls_images):
+        progressB(k+1, len(ls_images), bar_len = 60, info = 'im_%d'%k)
         im.thumbnail(size, Image.ANTIALIAS)        
         padding = Image.new('RGBA', size, (0, 0, 0, 0))
         padding.paste(im,(int((size[0] - im.size[0]) / 2), int((size[1] - im.size[1]) / 2)))
@@ -154,10 +153,8 @@ def binary_file(bin_filename,im_filename, size = (32,32), dump = 0):
         g = arr[:,:,0].flatten()
         b = arr[:,:,0].flatten()
         r = np.array(list(lbl) + list(r) + list(g) + list(b), np.uint8)
-        ls.append(r)   
-
-        progressB(k+1, len(ls_images), bar_len = 60, info = 'im_%d'%k)
-
+        ls.append(r)           
+    print()
     output = np.array(ls)
     if dump:
         output.dump(bin_filename)
@@ -165,9 +162,9 @@ def binary_file(bin_filename,im_filename, size = (32,32), dump = 0):
         output.tofile(bin_filename)
 
         
-if __name__ == '__main__':
-    import sys    
-    if len(sys.argv) > 2:
+if __name__ == '__main__':       
+    if len(sys.argv) > 3:
         bin_filename = sys.argv[1]
         im_filename = sys.argv[2]
-        binary_file(bin_filename,im_filename)
+        stp = sys.argv[3]
+        binary_file(bin_filename,im_filename,stp)
