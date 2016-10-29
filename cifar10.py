@@ -192,6 +192,9 @@ def dump_kernel(kernel, num=0):
         k.dump('kernel_%d.obj'%num)
    
 def put_kernels_on_grid (kernel, grid_Y, grid_X, pad=1):
+    ##
+    ## https://gist.github.com/kukuruza/03731dc494603ceab0c5
+    ##
     '''Visualize conv. features as an image (mostly for the 1st layer).
     Place kernel into a grid, with some paddings between adjacent filters.
     Args:
