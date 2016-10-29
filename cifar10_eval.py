@@ -53,13 +53,13 @@ tf.app.flags.DEFINE_string('checkpoint_dir', '/tmp/cifar10_train',
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 5,
                             """How often to run the eval.""")
-tf.app.flags.DEFINE_integer('num_examples', 10000,
+tf.app.flags.DEFINE_integer('num_examples', 8260,
                             """Number of examples to run.""")
-tf.app.flags.DEFINE_boolean('run_once', False,
+tf.app.flags.DEFINE_boolean('run_once', True,
                          """Whether to run eval only once.""")
 
 
-def eval_once(saver, summary_writer, top_k_op, summary_op):
+def eval_once(saver, summary_writer, top_k_op, summary_op , logits = None, logitsfilename = "logits.bin"):
     """Run Eval once.
 
     Args:
@@ -93,15 +93,27 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
             true_count = 0  # Counts the number of correct predictions.
             total_sample_count = num_iter * FLAGS.batch_size
             step = 0
+            
+            #resultado_rn = []
+            
             while step < num_iter and not coord.should_stop():
                 predictions = sess.run([top_k_op])
                 true_count += np.sum(predictions)
                 step += 1
+                
+                array_logits = sess.run(logits)
+                array_logits.dump(logitsfilename)
+                #resultado_rn.append(array_logits[0][0])
+                #print('valor ',array_logits[0][0], '-->',array_logits)
+                
 
             # Compute precision @ 1.
             precision = true_count / total_sample_count
             print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
-
+            
+            #mapa = np.array(resultado_rn)
+            #mapa.dump(logitsfilename)
+            
             summary = tf.Summary()
             summary.ParseFromString(sess.run(summary_op))
             summary.value.add(tag='Precision @ 1', simple_value=precision)
@@ -120,9 +132,12 @@ def evaluate():
         eval_data = FLAGS.eval_data == 'test'
         images, labels = cifar10.inputs(eval_data=eval_data)
 
+        # Display the training images in the visualizer.
+        #tf.image_summary('images', images)
+
         # Build a Graph that computes the logits predictions from the
         # inference model.
-        logits = cifar10.inference(images)
+        logits = cifar10.inference(images,1)
 
         # Calculate predictions.
         top_k_op = tf.nn.in_top_k(logits, labels, 1)
@@ -139,7 +154,7 @@ def evaluate():
         summary_writer = tf.train.SummaryWriter(FLAGS.eval_dir, g)
 
         while True:
-            eval_once(saver, summary_writer, top_k_op, summary_op)
+            eval_once(saver, summary_writer, top_k_op, summary_op, logits)
             if FLAGS.run_once:
                 break
             time.sleep(FLAGS.eval_interval_secs)
