@@ -171,7 +171,15 @@ if __name__ == '__main__':
         binary_file(bin_filename=args.file, img_filename=args.image, save_img=args.save_img, limit_save=l)
     elif st is not None and b == []:
         binary_file(bin_filename=args.file, img_filename=args.image, step=st, save_img=args.save_img, limit_save=l)
-    else:
+    elif st is None and len(b) > 0:
+        binary_file(
+            bin_filename=args.file,
+            img_filename=args.image,
+            box=b,
+            save_img=args.save_img,
+            limit_save=l
+        )
+    elif st is not None and len(b) > 0:
         binary_file(
             bin_filename=args.file,
             img_filename=args.image,
@@ -180,4 +188,6 @@ if __name__ == '__main__':
             save_img=args.save_img,
             limit_save=l
         )
+    
+        
 
