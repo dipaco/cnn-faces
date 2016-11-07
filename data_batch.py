@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
     exgroup = group.add_mutually_exclusive_group(required=True)
     exgroup.add_argument('--img2bin', action='store_true', help='Genera un data_bach a partir de una imagen')
-    exgroup.add_argument('--bin2img', action='store_true', help='Genera una imagen a partir de un archivo .bin')
+    exgroup.add_argument('--bin2img', action='store_true', help='Grafica los logits de la imagen')
 
     parser.add_argument('--step', help='Desplazamiento de box')
     parser.add_argument('--box', nargs=2, help='Dimensiones de box')
