@@ -141,6 +141,45 @@ def binary_file(bin_filename, img_filename, step=10, size=(32, 32), box=[81, 81]
         output.tofile(bin_filename)
 
 
+def bin2img(bin_filename, img_filename, step=10):
+    from matplotlib.pyplot import show, imshow, colorbar
+    from scipy.misc import imresize
+    from matplotlib.image import imread
+
+    r = np.load(bin_filename)
+    I = imread(img_filename)
+    # r = np.load('logits_3_face.bin')
+    # I = imread('3_face.jpg')
+
+    def ishape(size=(350, 590), stp=5):
+        k = 0
+        j = 0
+        for i in range(0, size[1], stp):
+            j += 1
+        for i in range(0, size[0], stp):
+            k += 1
+        return k, j
+
+    # a = [r[i][0] for i in range(0, r.shape[0])]
+    # ar = np.array(a)
+    ar = r[:, 0]
+    current_step = step
+    s = ishape(stp=current_step)
+    # s = (s[0] + 40 / current_step, s[1] + 40 / current_step)
+    print(s)
+    f = np.reshape(ar, s)
+
+    f = (255 * (f - f.min()) / (f.max() - f.min())).astype('uint8')
+    f = imresize(f, I.shape[:2])
+    F = np.stack((f, f, f), 2)
+    # rn = f.max() - f.min()
+
+    # imshow(f > 0.9*rn + f.min(), cmap='gray')
+    F = (0.8 * F + 0.2 * I).astype('uint8')
+    imshow(F)
+    colorbar()
+    show()
+    
 if __name__ == '__main__':
     import argparse
 
