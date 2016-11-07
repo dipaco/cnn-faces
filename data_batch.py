@@ -80,7 +80,7 @@ def read_binary_file(bin_filename, dump=0, typea=np.uint8):
         return np.fromfile(bin_filename, dtype=typea)
 
 
-def image2grid(img_filename, s=1, height=32, width=32, save_img=False, limit_save_img=-1):
+def image2grid(img_filename, s=10, height=32, width=32, save_img=False, limit_save_img=-1):
     # Image:
     #   +----+----+----+----+
     #   | 0  | 1  | 2  | 3  |
@@ -179,7 +179,7 @@ def bin2img(bin_filename, img_filename, step=10):
     imshow(F)
     colorbar()
     show()
-    
+
 if __name__ == '__main__':
     import argparse
 
@@ -187,6 +187,10 @@ if __name__ == '__main__':
     group = parser.add_argument_group(title='Argumentos requeridos')
     group.add_argument('--file', help='Nombre del archivo .bin', required=True)
     group.add_argument('--image', help='Nombre de la imagen', required=True)
+
+    exgroup = group.add_mutually_exclusive_group(required=True)
+    exgroup.add_argument('--img2bin', action='store_true', help='Genera un data_bach a partir de una imagen')
+    exgroup.add_argument('--bin2img', action='store_true', help='Genera una imagen a partir de un archivo .bin')
 
     parser.add_argument('--step', help='Desplazamiento de box')
     parser.add_argument('--box', nargs=2, help='Dimensiones de box')
@@ -196,37 +200,43 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     st = None
-    b = []
-    l = -1
     if args.step is not None:
         st = int(args.step)
-    if args.box is not None:
-        b.append(int(args.box[0]))
-        b.append(int(args.box[0]))
-    if args.limit is not None:
-        l = int(args.limit)
 
-    if st is None and b == []:
-        binary_file(bin_filename=args.file, img_filename=args.image, save_img=args.save_img, limit_save=l)
-    elif st is not None and b == []:
-        binary_file(bin_filename=args.file, img_filename=args.image, step=st, save_img=args.save_img, limit_save=l)
-    elif st is None and len(b) > 0:
-        binary_file(
-            bin_filename=args.file,
-            img_filename=args.image,
-            box=b,
-            save_img=args.save_img,
-            limit_save=l
-        )
-    elif st is not None and len(b) > 0:
-        binary_file(
-            bin_filename=args.file,
-            img_filename=args.image,
-            step=st,
-            box=b,
-            save_img=args.save_img,
-            limit_save=l
-        )
-    
+    if args.img2bin:
+        b = []
+        l = -1
+        if args.box is not None:
+            b.append(int(args.box[0]))
+            b.append(int(args.box[0]))
+        if args.limit is not None:
+            l = int(args.limit)
+
+        if st is None and b == []:
+            binary_file(bin_filename=args.file, img_filename=args.image, save_img=args.save_img, limit_save=l)
+        elif st is not None and b == []:
+            binary_file(bin_filename=args.file, img_filename=args.image, step=st, save_img=args.save_img, limit_save=l)
+        elif st is None and len(b) > 0:
+            binary_file(
+                bin_filename=args.file,
+                img_filename=args.image,
+                box=b,
+                save_img=args.save_img,
+                limit_save=l
+            )
+        elif st is not None and len(b) > 0:
+            binary_file(
+                bin_filename=args.file,
+                img_filename=args.image,
+                step=st,
+                box=b,
+                save_img=args.save_img,
+                limit_save=l
+            )
+    elif args.bin2img:
+        if st is None:
+            bin2img(bin_filename=args.file, img_filename=args.image)
+        else:
+            bin2img(bin_filename=args.file, img_filename=args.image, step=st)
         
 
