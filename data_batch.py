@@ -165,7 +165,7 @@ def bin2img(bin_filename, img_filename, step=10):
     # ar = np.array(a)
     ar = r[:, 0]
     current_step = step
-    s = ishape(stp=current_step)
+    s = ishape(size=(I.shape[0],I.shape[1]), stp=current_step)
     # s = (s[0] + 40 / current_step, s[1] + 40 / current_step)
     print(s)
     f = np.reshape(ar, s)
