@@ -53,13 +53,13 @@ tf.app.flags.DEFINE_string('checkpoint_dir', '/tmp/cifar10_train',
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 5,
                             """How often to run the eval.""")
-tf.app.flags.DEFINE_integer('num_examples', 8260,
+tf.app.flags.DEFINE_integer('num_examples', 2166,
                             """Number of examples to run.""")
 tf.app.flags.DEFINE_boolean('run_once', True,
-                         """Whether to run eval only once.""")
+                            """Whether to run eval only once.""")
 
 
-def eval_once(saver, summary_writer, top_k_op, summary_op , logits = None, logitsfilename = "logits.bin"):
+def eval_once(saver, summary_writer, top_k_op, summary_op, logits=None, filenamelogits='logits.bin'):
     """Run Eval once.
 
     Args:
@@ -94,7 +94,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op , logits = None, logit
             total_sample_count = num_iter * FLAGS.batch_size
             step = 0
             
-            #resultado_rn = []
+            # resultado_rn = []
             
             while step < num_iter and not coord.should_stop():
                 predictions = sess.run([top_k_op])
@@ -102,17 +102,16 @@ def eval_once(saver, summary_writer, top_k_op, summary_op , logits = None, logit
                 step += 1
                 
                 array_logits = sess.run(logits)
-                array_logits.dump(logitsfilename)
-                #resultado_rn.append(array_logits[0][0])
-                #print('valor ',array_logits[0][0], '-->',array_logits)
-                
+                array_logits.dump(filenamelogits)
+                # resultado_rn.append(array_logits[0][0])
+                # print('valor ',array_logits[0][0], '-->',array_logits)
 
             # Compute precision @ 1.
             precision = true_count / total_sample_count
             print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
             
-            #mapa = np.array(resultado_rn)
-            #mapa.dump(logitsfilename)
+            # mapa = np.array(resultado_rn)
+            # mapa.dump('arr_logits_7v.bin')
             
             summary = tf.Summary()
             summary.ParseFromString(sess.run(summary_op))
@@ -125,26 +124,25 @@ def eval_once(saver, summary_writer, top_k_op, summary_op , logits = None, logit
         coord.join(threads, stop_grace_period_secs=10)
 
 
-def evaluate():
+def evaluate(filenamelogits, test_batch='test_batch.bin'):
     """Eval CIFAR-10 for a number of steps."""
     with tf.Graph().as_default() as g:
         # Get images and labels for CIFAR-10.
         eval_data = FLAGS.eval_data == 'test'
-        images, labels = cifar10.inputs(eval_data=eval_data)
+        images, labels = cifar10.inputs(eval_data=eval_data, test_batch=test_batch)
 
         # Display the training images in the visualizer.
-        #tf.image_summary('images', images)
+        # tf.image_summary('images', images)
 
         # Build a Graph that computes the logits predictions from the
         # inference model.
-        logits = cifar10.inference(images,1)
+        logits = cifar10.inference(images)
 
         # Calculate predictions.
         top_k_op = tf.nn.in_top_k(logits, labels, 1)
 
         # Restore the moving average version of the learned variables for eval.
-        variable_averages = tf.train.ExponentialMovingAverage(
-	                            cifar10.MOVING_AVERAGE_DECAY)
+        variable_averages = tf.train.ExponentialMovingAverage(cifar10.MOVING_AVERAGE_DECAY)
         variables_to_restore = variable_averages.variables_to_restore()
         saver = tf.train.Saver(variables_to_restore)
 
@@ -154,18 +152,26 @@ def evaluate():
         summary_writer = tf.train.SummaryWriter(FLAGS.eval_dir, g)
 
         while True:
-            eval_once(saver, summary_writer, top_k_op, summary_op, logits)
+            eval_once(saver, summary_writer, top_k_op, summary_op, logits,
+                      filenamelogits=filenamelogits)
             if FLAGS.run_once:
                 break
             time.sleep(FLAGS.eval_interval_secs)
 
 
 def main(argv=None):  # pylint: disable=unused-argument
+    filenamelogits = 'logits.bin'
+    test_batch = 'test_batch.bin'
+    if argv is not None:
+        filenamelogits = argv[1]
+        test_batch = argv[2]
+
     cifar10.maybe_download_and_extract()
     if tf.gfile.Exists(FLAGS.eval_dir):
         tf.gfile.DeleteRecursively(FLAGS.eval_dir)
     tf.gfile.MakeDirs(FLAGS.eval_dir)
-    evaluate()
+    evaluate(filenamelogits=filenamelogits,
+             test_batch=test_batch)
 
 
 if __name__ == '__main__':

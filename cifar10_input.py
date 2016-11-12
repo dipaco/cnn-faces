@@ -197,8 +197,8 @@ def distorted_inputs(data_dir, batch_size):
 									 shuffle=True)
 
 
-def inputs(eval_data, data_dir, batch_size):
-    """Construct input for CIFAR evaluation using the Reader ops.
+def inputs(eval_data, data_dir, batch_size, test_batch='test_batch.bin'):
+   """Construct input for CIFAR evaluation using the Reader ops.
 
     Args:
     eval_data: bool, indicating if one should use the train or eval data set.
@@ -214,7 +214,7 @@ def inputs(eval_data, data_dir, batch_size):
                              for i in xrange(1, 2)]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
     else:
-        filenames = [os.path.join(data_dir, 'test_batch.bin')]
+        filenames = [os.path.join(data_dir, test_batch)]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
     for f in filenames:
@@ -233,8 +233,7 @@ def inputs(eval_data, data_dir, batch_size):
 
     # Image processing for evaluation.
     # Crop the central [height, width] of the image.
-    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
-                                                                                                             width, height)
+    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image, width, height)
 
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_whitening(resized_image)
@@ -245,6 +244,5 @@ def inputs(eval_data, data_dir, batch_size):
                                                min_fraction_of_examples_in_queue)
 
     # Generate a batch of images and labels by building up a queue of examples.
-    return _generate_image_and_label_batch(float_image, read_input.label,
-									 min_queue_examples, batch_size,
-									 shuffle=False)
+    return _generate_image_and_label_batch(float_image, read_input.label, min_queue_examples, batch_size, shuffle=False)
+

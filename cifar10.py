@@ -49,7 +49,7 @@ import cifar10_input
 FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
-tf.app.flags.DEFINE_integer('batch_size', 8260,
+tf.app.flags.DEFINE_integer('batch_size', 128,
 						"""Number of images to process in a batch.""")
 tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data',
 					   """Path to the CIFAR-10 data directory.""")
@@ -160,7 +160,7 @@ def distorted_inputs():
     return images, labels
 
 
-def inputs(eval_data):
+def inputs(eval_data, test_batch='test_batch.bin'):
     """Construct input for CIFAR evaluation using the Reader ops.
 
     Args:
@@ -178,23 +178,23 @@ def inputs(eval_data):
     data_dir = os.path.join(FLAGS.data_dir, 'cifar-10-batches-bin')
     images, labels = cifar10_input.inputs(eval_data=eval_data,
                                           data_dir=data_dir,
-                                          batch_size=FLAGS.batch_size)
+                                          batch_size=FLAGS.batch_size,
+                                          test_batch=test_batch)
     if FLAGS.use_fp16:
         images = tf.cast(images, tf.float16)
         labels = tf.cast(labels, tf.float16)
     return images, labels
 
-def dump_kernel(kernel, num=0):  
+
+def dump_kernel(kernel, num=0):
     init = tf.initialize_all_variables()
     with tf.Session() as sess:
         sess.run(init)
         k = sess.run(kernel)
-        k.dump('kernel_%d.bin'%num)
-   
-def put_kernels_on_grid (kernel, grid_Y, grid_X, pad=1):
-    ##
-    ## https://gist.github.com/kukuruza/03731dc494603ceab0c5
-    ##
+        k.dump('kernel_%d.bin' % num)
+
+
+def put_kernels_on_grid(kernel, grid_Y, grid_X, pad=1):
     '''Visualize conv. features as an image (mostly for the 1st layer).
     Place kernel into a grid, with some paddings between adjacent filters.
     Args:
@@ -207,7 +207,7 @@ def put_kernels_on_grid (kernel, grid_Y, grid_X, pad=1):
       Tensor of shape [(Y+pad)*grid_Y, (X+pad)*grid_X, NumChannels, 1].
     '''
     # pad X and Y
-    x1 = tf.pad(kernel, tf.constant( [[pad,0],[pad,0],[0,0],[0,0]] ))
+    x1 = tf.pad(kernel, tf.constant([[pad, 0], [pad, 0], [0, 0], [0, 0]]))
 
     # X and Y dimensions, w.r.t. padding
     Y = kernel.get_shape()[0] + pad
@@ -237,8 +237,8 @@ def put_kernels_on_grid (kernel, grid_Y, grid_X, pad=1):
 
     return x8
 
-	
-def inference(images,num=0):
+
+def inference(images):
     """Build the CIFAR-10 model.
 
     Args:
@@ -258,7 +258,6 @@ def inference(images,num=0):
                                              shape=[5, 5, 3, 64],
                                              stddev=5e-2,
                                              wd=0.0)
-       
 
         conv = tf.nn.conv2d(images, kernel, [1, 1, 1, 1], padding='SAME')
         biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
@@ -266,15 +265,13 @@ def inference(images,num=0):
         conv1 = tf.nn.relu(bias, name=scope.name)
         _activation_summary(conv1)
 
-        # save kernel
         tf.get_variable_scope().reuse_variables()
         weights = tf.get_variable('weights')
         grid_x = grid_y = 8   # to get a square grid for 64 conv1 features
-        grid = put_kernels_on_grid (weights, grid_y, grid_x)        
+        grid = put_kernels_on_grid(weights, grid_y, grid_x)
         tf.image_summary('kernel', grid, max_images=1)
 
-        dump_kernel(kernel,num)
-
+        # dump_kernel(kernel)
 
     # pool1
     pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
@@ -294,13 +291,14 @@ def inference(images,num=0):
         bias = tf.nn.bias_add(conv, biases)
         conv2 = tf.nn.relu(bias, name=scope.name)
         _activation_summary(conv2)
-
+        
+        dump_kernel(kernel)
     # norm2
     norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='norm2')
 
     # pool2
     pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1],
-                                             strides=[1, 2, 2, 1], padding='SAME', name='pool2')
+                           strides=[1, 2, 2, 1], padding='SAME', name='pool2')
 
     # local3
     with tf.variable_scope('local3') as scope:
@@ -401,10 +399,10 @@ def train(total_loss, global_step):
 
     # Decay the learning rate exponentially based on the number of steps.
     lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE,
-                                                              global_step,
-                                                              decay_steps,
-                                                              LEARNING_RATE_DECAY_FACTOR,
-                                                              staircase=True)
+                                    global_step,
+                                    decay_steps,
+                                    LEARNING_RATE_DECAY_FACTOR,
+                                    staircase=True)
     tf.scalar_summary('learning_rate', lr)
 
     # Generate moving averages of all losses and associated summaries.
@@ -448,7 +446,7 @@ def maybe_download_and_extract():
     if not os.path.exists(filepath):
         def _progress(count, block_size, total_size):
             sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
-                  float(count * block_size) / float(total_size) * 100.0))
+                                                             float(count * block_size) / float(total_size) * 100.0))
             sys.stdout.flush()
         filepath, _ = urllib.request.urlretrieve(DATA_URL, filepath, _progress)
         print()
