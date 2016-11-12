@@ -165,8 +165,9 @@ def main(argv=None):  # pylint: disable=unused-argument
     if argv is not None:
         filenamelogits = argv[1]
         test_batch = argv[2]
-
     cifar10.maybe_download_and_extract()
+    print('batch_size=', FLAGS.batch_size)
+    print('num_examples=', FLAGS.num_examples)
     if tf.gfile.Exists(FLAGS.eval_dir):
         tf.gfile.DeleteRecursively(FLAGS.eval_dir)
     tf.gfile.MakeDirs(FLAGS.eval_dir)

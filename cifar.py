@@ -2,13 +2,12 @@ import subprocess
 
 
 def run_cifar(batch_size, num_examples, filenamelogits='logits.bin', test_batch='test_batch.bin'):
-    cmd = 'python cifar10_eval.py ' \
-          '{} {} ' \
-          '--batch_size {} ' \
-          '--num_examples {}'.format(filenamelogits,
+    cmd = 'python3 cifar10_eval.py {} {} --batch_size {} --num_examples {}'.format(
+                                     filenamelogits,
                                      test_batch,
                                      batch_size,
                                      num_examples)
+    print(cmd)    
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
     out, err = p.communicate()
     print(''.join(map(chr, out)))
@@ -17,10 +16,12 @@ def run_cifar(batch_size, num_examples, filenamelogits='logits.bin', test_batch=
 def process_batch(filename):
     import re
     with open(filename, 'r') as f:
-        # num$den_batch_ind_bsize.bin
+        # num#den_batch_ind_bsize.bin
         for line in f:
+            if line[-1] in ('\n','\r'):
+                line = line[:-1]
             lxm = re.split(' |_|\.|\n|\r', line)
-            filenamelogits = 'logits_{}_{}.bin'.format(lxm[0], lxm[2])  # logits_1$1_1.bin
+            filenamelogits = 'logits_{}_{}.bin'.format(lxm[0], lxm[2])  # logits_1#1_1.bin
             elm = int(lxm[3])
             run_cifar(batch_size=elm,
                       num_examples=elm,
@@ -38,7 +39,7 @@ if __name__ == '__main__':
     exgroup.add_argument('--one', action='store_true', help='')
 
     parser.add_argument('--filename', help='List of batch filenames to process. '
-                                           'Filename format: num$den_batch_ind_bsize.bin')
+                                           'Filename format: num#den_batch_ind_bsize.bin')
 
     parser.add_argument('--bsize', help='Number of images to process in a batch')
     parser.add_argument('--nexamples', help='Number of examples to run')
