@@ -15,7 +15,7 @@ def run_cifar(batch_size, num_examples, filenamelogits='logits.bin', test_batch=
 
 def process_batch(filename):
     import re
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf8') as f:
         # num#den_batch_ind_bsize.bin
         for line in f:
             if line[-1] in ('\n','\r'):
