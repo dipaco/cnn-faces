@@ -31,7 +31,7 @@ def download_images(urlstxt, pattern):
                 f += 1
         print('Successfully downloaded {}'.format(t))
         print('Download errors         {}'.format(f))
-        with open('log.txt', 'w') as l:
+        with open('log.txt', 'w', encoding='utf8') as l:
             l.writelines(log)
 
 if __name__ == '__main__':
