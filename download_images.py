@@ -23,7 +23,7 @@ def download_images(urlstxt, pattern):
                 t += 1
             except HTTPError as e:
                 print(e)
-                log.append('Error: {} at file:{} with url:{}\n'.format(e, filename, url))
+                log.append('HTTPError: {} at file:{} with url:{}\n'.format(e, filename, url))
                 f += 1
             except Exception as ex:
                 print(ex)
