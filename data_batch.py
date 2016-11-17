@@ -161,14 +161,8 @@ def bin2img(bin_filename, img_filename, step=10):
     # r = np.load('logits_3_face.bin')
     # I = imread('3_face.jpg')
 
-    def ishape(size=(350, 590), stp=10):
-        k = 0
-        j = 0
-        for i in range(0, size[1], stp):
-            j += 1
-        for i in range(0, size[0], stp):
-            k += 1
-        return k, j
+    def ishape(size=(350, 590), stp=10):        
+        return len(range(0, size[0], stp)), len(range(0, size[1], stp))
 
     # a = [r[i][0] for i in range(0, r.shape[0])]
     # ar = np.array(a)
