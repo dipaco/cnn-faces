@@ -108,7 +108,7 @@ def image2grid(img_filename, s=10, height=32, width=32, factor=1, save_img=False
         cw = int((width - 1) / 2)
         for h in range(0, imgheight, s):
             for w in range(0, imgwidth, s):
-                grid.append(im.crop((w - cw, h - ch, w - cw + width, h - ch + height)))
+                grid.append(im.crop((w - cw, h - ch, w + cw, h + ch)))
                 if save_img:
                     grid[k].save('image_%d.jpg' % k)
                     k += 1
