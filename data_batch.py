@@ -14,7 +14,7 @@ def progressbar(step, total, bar_len, info='', symb_f='\u2588', symb_e='-'):
     sys.stdout.flush()
 
 
-def binary_file(bin_filename, ls_image, ls_label, size=(32, 32), dump=0):
+def binary_filec(bin_filename, ls_image, ls_label, size=(32, 32), dump=0):
     """
     https://www.cs.toronto.edu/~kriz/cifar.html
     The CIFAR-10 dataset consists of 60000 32x32 colour images in 10 classes,
@@ -72,16 +72,16 @@ def read_binary_file(bin_filename, dump=0, typea=np.uint8):
         def unpickle(file):
             import _pickle as cpickle
             fo = open(file, 'rb')
-            dict = cpickle.load(fo)
+            dicts = cpickle.load(fo)
             fo.close()
-            return dict
+            return dicts
 
         return unpickle(bin_filename)
     else:
         return np.fromfile(bin_filename, dtype=typea)
 
 
-def image2grid(img_filename, s=10, height=32, width=32, factor=1, save_img=False, limit_save_img=-1):
+def image2grid(img_filename, s=10, height=81, width=81, factor=1, save_img=False, limit_save_img=-1):
     # Image:
     #   +----+----+----+----+
     #   | 0  | 1  | 2  | 3  |
@@ -122,14 +122,14 @@ def image2grid(img_filename, s=10, height=32, width=32, factor=1, save_img=False
             imgwidth += 1
             im = im.crop((0, 0, imgwidth, imgheight))
         else:
-            it = ceil(imgwidth/float(s))*s + 1 - imgwidth
+            it = int(ceil(imgwidth/float(s))*s + 1 - imgwidth)
             if it % 2 == 0:
                 it /= 2
-                im = im.crop((-it, 0, imgwidth + it, imgheight))
-                imgwidth += 2 * it
+                im = im.crop((-int(it), 0, int(imgwidth + it), imgheight))
+                imgwidth += int(2 * it)
             else:
-                itl = floor(it / 2)
-                itr = ceil(it / 2)
+                itl = int(floor(it / 2))
+                itr = int(ceil(it / 2))
                 im = im.crop((-itl, 0, imgwidth + itr, imgheight))
                 imgwidth += it
 
@@ -150,14 +150,14 @@ def image2grid(img_filename, s=10, height=32, width=32, factor=1, save_img=False
             imgheight += 1
             im = im.crop((0, 0, imgwidth, imgheight))
         else:
-            it = ceil(imgheight / float(s)) * s + 1 - imgheight
+            it = int(ceil(imgheight / float(s)) * s + 1 - imgheight)
             if it % 2 == 0:
                 it /= 2
-                im = im.crop((0, -it, imgwidth, imgheight + it))
-                imgheight += 2 * it
+                im = im.crop((0, -int(it), imgwidth, int(imgheight + it)))
+                imgheight += int(2 * it)
             else:
-                itt = floor(it / 2)
-                itb = ceil(it / 2)
+                itt = int(floor(it / 2))
+                itb = int(ceil(it / 2))
                 im = im.crop((0, -itt, imgwidth, imgheight + itb))
                 imgheight += it
 
@@ -176,7 +176,8 @@ def image2grid(img_filename, s=10, height=32, width=32, factor=1, save_img=False
         return grid
 
 
-def binary_file(bin_filename, img_filename, step=10, size=(32, 32), box=[81, 81], factor=1, save_img=False, limit_save=-1, dump=0):
+def binary_file(bin_filename, img_filename, step=10, size=(32, 32), box=[81, 81],
+                factor=1, save_img=False, limit_save=-1, dump=0):
     ls = []
     ls_images = image2grid(img_filename=img_filename,
                            s=step,
@@ -203,13 +204,17 @@ def binary_file(bin_filename, img_filename, step=10, size=(32, 32), box=[81, 81]
         ls.append(r)
     print()
     output = np.array(ls)
+
+    from os.path import splitext
+    file, ext = splitext(bin_filename)
+    file += '_' + str(len(ls_images))
     if dump:
-        output.dump(bin_filename)
+        output.dump(file + ext)
     else:
-        output.tofile(bin_filename)
+        output.tofile(file + ext)
 
 
-def bin2img(bin_filename, img_filename, step=10):
+def bin2img(bin_filename, img_filename, step=10, factor=1):
     from matplotlib.pyplot import show, imshow, colorbar
     from scipy.misc import imresize
     from matplotlib.image import imread
@@ -219,8 +224,14 @@ def bin2img(bin_filename, img_filename, step=10):
 
     # r = np.load('logits_3_face.bin')
     # I = imread('3_face.jpg')
-
-    def ishape(size=(350, 590), stp=10):        
+    
+    if factor != 1:
+        _height, _width, _ = I.shape
+        _width *= factor
+        _height *= factor
+        I = imresize(I, (int(_height), int(_width)))
+    
+    def ishape(size, stp=10):
         return len(range(0, size[0], stp)), len(range(0, size[1], stp))
 
     # a = [r[i][0] for i in range(0, r.shape[0])]
@@ -238,10 +249,12 @@ def bin2img(bin_filename, img_filename, step=10):
     # rn = f.max() - f.min()
 
     # imshow(f > 0.9*rn + f.min(), cmap='gray')
-    F = (0.8 * F + 0.2 * I).astype('uint8')
+    fade = 0.8
+    F = (fade * F + (1.0 - fade) * I).astype('uint8')
     imshow(F)
     colorbar()
     show()
+    return f
 
 
 if __name__ == '__main__':
@@ -261,6 +274,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_img', action='store_true', help='Guarda las img generadas por crop')
     parser.add_argument('--limit', help='Numero maximo de img a guardar por --save_img')
     parser.add_argument('--pyramid', action='store_true', help='')
+    parser.add_argument('--factor', help='')
 
     args = parser.parse_args()
 
@@ -269,51 +283,59 @@ if __name__ == '__main__':
         st = int(args.step)
 
     if args.img2bin:
-        b = [81, 81]
+        bx = [81, 81]
         l = -1
         if args.box is not None:
-            b.append(int(args.box[0]))
-            b.append(int(args.box[0]))
+            bx.append(int(args.box[0]))
+            bx.append(int(args.box[0]))
         if args.limit is not None:
             l = int(args.limit)
-
+        # num#den_batch_ind_bsize.bin
         binary_file(
-            bin_filename=args.file,
+            bin_filename='1#1_' + args.file,
             img_filename=args.image,
             step=st,
-            box=b,
+            box=bx,
             save_img=args.save_img,
             limit_save=l
         )
         if args.pyramid:
             binary_file(
-                bin_filename='3_2' + args.file,
+                bin_filename='3#2_' + args.file,
                 img_filename=args.image,
                 step=st,
-                box=b,
+                box=bx,
                 factor=3/2,
                 save_img=args.save_img,
                 limit_save=l
             )
             binary_file(
-                bin_filename='2_3' + args.file,
+                bin_filename='2#3_' + args.file,
                 img_filename=args.image,
                 step=st,
-                box=b,
+                box=bx,
                 factor=2/3,
                 save_img=args.save_img,
                 limit_save=l
             )
             binary_file(
-                bin_filename='4_9' + args.file,
+                bin_filename='4#9_' + args.file,
                 img_filename=args.image,
                 step=st,
-                box=b,
+                box=bx,
                 factor=4/9,
                 save_img=args.save_img,
                 limit_save=l
             )
     elif args.bin2img:
-        bin2img(bin_filename=args.file, img_filename=args.image, step=st)
-
-
+        pyrm = 1
+        if args.factor is not None:
+            pyrm = args.factor
+            if pyrm == '2/3':
+                bin2img(bin_filename=args.file, img_filename=args.image, step=st, factor=2/3)
+            elif pyrm == '3/2':
+                bin2img(bin_filename=args.file, img_filename=args.image, step=st, factor=3/2)
+            elif pyrm == '4/9':
+                bin2img(bin_filename=args.file, img_filename=args.image, step=st, factor=4/9)
+        else:
+            bin2img(bin_filename=args.file, img_filename=args.image, step=st)
