@@ -196,6 +196,7 @@ def dump_kernel(kernel, num=0):
 
 def put_kernels_on_grid(kernel, grid_Y, grid_X, pad=1):
     '''Visualize conv. features as an image (mostly for the 1st layer).
+    https://gist.github.com/kukuruza/03731dc494603ceab0c5
     Place kernel into a grid, with some paddings between adjacent filters.
     Args:
       kernel:            tensor of shape [Y, X, NumChannels, NumKernels]
