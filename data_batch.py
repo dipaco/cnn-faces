@@ -94,7 +94,6 @@ def image2grid(img_filename, s=10, height=32, width=32, factor=1, save_img=False
     #   +----+----+----+----+----+----+----+----+
     #
     with Image.open(img_filename) as im:
-
         if factor != 1:
             _width, _height = im.size
             _width *= factor
@@ -102,6 +101,66 @@ def image2grid(img_filename, s=10, height=32, width=32, factor=1, save_img=False
             im = im.resize((int(_width), int(_height)))
 
         imgwidth, imgheight = im.size
+
+        modw = imgwidth % s
+        modh = imgheight % s
+
+        # im = im.crop((left, top, right, bottom))
+
+        from math import ceil, floor
+
+        # width % s
+        # +--+-----------------+--+
+        # |XX|                 |XX|
+        # |XX|                 |XX|
+        # |XX|                 |XX|
+        # +--+-----------------+--+
+        #
+        if modw == 1:
+            pass
+        elif modw == 0:
+            imgwidth += 1
+            im = im.crop((0, 0, imgwidth, imgheight))
+        else:
+            it = ceil(imgwidth/float(s))*s + 1 - imgwidth
+            if it % 2 == 0:
+                it /= 2
+                im = im.crop((-it, 0, imgwidth + it, imgheight))
+                imgwidth += 2 * it
+            else:
+                itl = floor(it / 2)
+                itr = ceil(it / 2)
+                im = im.crop((-itl, 0, imgwidth + itr, imgheight))
+                imgwidth += it
+
+        # height % s
+        # +-----------------+
+        # |XXXXXXXXXXXXXXXXX|
+        # +-----------------+
+        # |                 |
+        # |                 |
+        # |                 |
+        # +-----------------+
+        # |XXXXXXXXXXXXXXXXX|
+        # +-----------------+
+        #
+        if modh == 1:
+            pass
+        elif modh == 0:
+            imgheight += 1
+            im = im.crop((0, 0, imgwidth, imgheight))
+        else:
+            it = ceil(imgheight / float(s)) * s + 1 - imgheight
+            if it % 2 == 0:
+                it /= 2
+                im = im.crop((0, -it, imgwidth, imgheight + it))
+                imgheight += 2 * it
+            else:
+                itt = floor(it / 2)
+                itb = ceil(it / 2)
+                im = im.crop((0, -itt, imgwidth, imgheight + itb))
+                imgheight += it
+
         grid = []
         k = 0
         ch = int((height - 1) / 2)
