@@ -68,7 +68,12 @@ Las imágenes de los sombreros y otras imágenes diferentes a sombreros fueron o
 Se uso la biblioteca TensorFlow para el lenguaje de programación Python 3.5
 
 \subsection{Métodos}
-Se uso una metodología basada en redes neuronales convolucionales tomando como base la implementación de Cifar-10, el cual se encarga de clasificar y etiquetar imágenes RGB de 32x32 de 10 clases diferentes. La arquitectura de Cifar-10 consiste en capas de convolución y operaciones no lineales cuyo resultado es procesado por una red neuronal, el procedimiento se describe en: %https://www.tensorflow.org/tutorials/deep_cnn/
+Se uso una metodología basada en redes neuronales convolucionales tomando como base la implementación de Cifar-10, el cual se encarga de clasificar y etiquetar imágenes RGB de 32x32 de 10 clases diferentes. 
+Debido a que no es viable entrenar una red neuronal con imágenes sin ningún tipo de procesamiento por la gran cantidad de píxeles que implica una imagen, es necesario reducir esta cantidad sin perder, en gran medida, la información importante que brindan todo el conjunto de datos, por lo tanto aplicamos la convolución para resaltar y extraer la información importante de la imagen y eliminar píxeles que no brinden información de interesante, sin embargo la matriz resultante aun es grande para la red neuronal. Para reducir las dimensiones de esta matriz se recurre a la operación no lineal max-pooling que consiste en tomar los valores mas significativos en múltiples ventanas de determinada dimensión de la matriz procesada y como resultado obtenemos una matriz mucho mas reducida y adecuada para el procesamiento en la red neuronal. Es decir, una red neuronal convolucional consiste en dos procesos, el primero se encarga de reducir las dimensiones de los datos a partir de convoluciones y otras operaciones no lineales y el segundo consiste en la red neuronal alimentada con los datos del primer proceso.
+
+La arquitectura de Cifar-10 consiste en una capa de convolución seguida de una operación max-pooling y una normalización, luego otra capa de convolución, una normalización y un max-pooling y finalmente el procesamiento de la red neuronal.
+
+%https://www.tensorflow.org/tutorials/deep_cnn/
 
 \section{Experimentos}
 
