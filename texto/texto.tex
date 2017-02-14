@@ -7,6 +7,10 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+
+\usepackage[T1]{fontenc} 
+\usepackage{tabto}
+
 % USER PACKAGES
 %\usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
@@ -76,6 +80,26 @@ La arquitectura de Cifar-10 consiste en una capa de convolución seguida de una 
 %https://www.tensorflow.org/tutorials/deep_cnn/
 
 \section{Experimentos}
+\subsection{Entrenamiento}
+Procesar el dataset: se procesa las imagenes de caras y sombreros para formar dos archivos binarios por lotes(aka databatch), cada uno con 10000 imágenes a color y con dos clases diferentes por archivo. La construcción del databatch se basa en el proceso descrito en Cifar-10, es decir, se construye una matriz donde cada una de sus filas corresponde a un vector de 3073 elementos que representan la información presente en la imagen. Para conformar este vector de 3073 elementos primero se debe re-dimensionar la imagen original a 32x32 conservando las proporciones de la imagen original, luego el primer elemento del vector corresponde a la etiqueta o clase de la imagen procesada (generalmente cero o uno), los siguientes 1024 elementos corresponden a la intensidad de los píxeles del canal r, los siguientes 1024 al canal g y finalmente los últimos 1024 al canal b del espacio de color rgb. Por lo tanto se forma la siguiente estructura de n-imágenes x 3073:
+
+
+\begin{flushleft}
+<1 label imagen 1><1024 r><1024 g><1024 b>\\
+<1 label imagen 2><1024 r><1024 g><1024 b>\\
+. . .\\
+<1 label imagen n><1024 r><1024 g><1024 b>\\
+\end{flushleft}
+
+%https://www.cs.toronto.edu/~kriz/cifar.html
+
+\subsection{Pruebas}
+Para evaluar una imagen, es necesario realizar un procedimiento que, similar al visto en la etapa de entrenamiento, genere archivos databatch que contengan toda la información pertinente para el correcto funcionamiento de la red neuronal. Primero se generan 3 imágenes adicionales donde cada una corresponde a la imagen original escalada en un factor de 2/3, 4/9 y 3/2. Para cada imagen se determina cual de sus dimensiones(horizontales y verticales) es mayor y a esa se le asigna un valor auxiliar fijo de 100, con una simple regla de tres se determina el valor correspondiente a la dimension menor. Utilizando estos valores, se determina un par de constantes S entendidas como el cociente de la división del valor original de la dimension por el valor auxiliar de está. En cada una de las imágenes pasamos una sliding window con dimensiones de 81x81 píxeles por toda la imagen, con el fin de generar un conjunto de particiones; el desplazamiento de esta ventada esta dado por las constantes S horizontal y vertical calculadas, la utilización de estas constantes en el desplazamiento de la ventana garantizan que, para las cuatro imágenes de diferente escala, se generen igual cantidad de elementos pero con diferentes grados de solapamiento, hecho de suma importancias para el análisis de los resultados dados por la red neuronal.
+
+
+
+
+
 
 \section{Resultados}
 
